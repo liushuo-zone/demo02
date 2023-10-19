@@ -1,21 +1,33 @@
 package com.example.demo02.entity;
 
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Data
+@TableName("t_user")
+@KeySequence(value = "seq_t_user", dbType = DbType.POSTGRE_SQL)
 public class User implements UserDetails {
+
+    @TableId(type = IdType.INPUT)
+    private Long id;
 
     private String username;
 
     private String password;
 
+    private LocalDateTime createTime;
+
+    @TableField(exist = false)
+    private List<Role> roleList;
+
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+    public Collection<Role> getAuthorities() {
+        return roleList;
     }
 
     @Override

@@ -1,9 +1,11 @@
 package com.example.demo02.filter;
 
+import com.example.demo02.mapper.UserMapper;
 import com.example.demo02.utils.JwtUtils;
 import com.example.demo02.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("token");
@@ -26,6 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        log.info(request.getRequestURI());
         String username;
         try {
             username = JwtUtils.parseToken(token);
@@ -33,9 +39,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             log.info("解析失败", e);
             throw e;
         }
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(new User() {{
-            setUsername(username);
-        }}, null, null);
+        User user = userMapper.findOneByUsername(username);
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user, null, user.getRoleList());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
     }
